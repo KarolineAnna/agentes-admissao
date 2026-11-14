@@ -1,0 +1,165 @@
+╔════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                ║
+║                          📑 ÍNDICE RÁPIDO - SCRIPTS DE DESCOBERTA                            ║
+║                                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+🚀 COMECE AQUI (5 minutos)
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   1. README_DESCOBERTA.md (3 min)
+      └─ Visão geral do projeto
+
+   2. QUICK_START.md (2 min)
+      └─ Guia rápido de 5 minutos
+
+   3. Execute:
+      └─ python scripts/testar_conexao.py
+      └─ python scripts/descobrir_mundo_http.py
+
+   4. Reinicie o servidor MCP
+      └─ ⚠️ IMPORTANTE!
+
+
+📚 DOCUMENTAÇÃO COMPLETA
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   Iniciante (15 minutos)
+   ├─ README_DESCOBERTA.md (3 min)
+   ├─ QUICK_START.md (2 min)
+   ├─ RESUMO_SCRIPTS.md (5 min)
+   └─ Executar scripts (5 min)
+
+   Intermediário (30 minutos)
+   ├─ README_DESCOBERTA.md (3 min)
+   ├─ SUMARIO_FINAL.md (5 min)
+   ├─ MAPA_NAVEGACAO.md (5 min)
+   ├─ INDICE_SCRIPTS.md (10 min)
+   └─ scripts/README.md (5 min)
+
+   Avançado (45 minutos)
+   ├─ DESCOBERTA_MUNDO.md (15 min)
+   ├─ scripts/TECNICO.md (10 min)
+   ├─ CHECKLIST_DESCOBERTA.md (5 min)
+   └─ Revisar código (15 min)
+
+
+🔍 ENCONTRAR INFORMAÇÕES
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   "Como começo?"
+   └─ README_DESCOBERTA.md ou QUICK_START.md
+
+   "Qual é o sumário?"
+   └─ SUMARIO_FINAL.md
+
+   "Como navego?"
+   └─ MAPA_NAVEGACAO.md
+
+   "Qual script usar?"
+   └─ scripts/README.md
+
+   "Preciso de detalhes técnicos"
+   └─ scripts/TECNICO.md
+
+   "Tenho um problema"
+   └─ DESCOBERTA_MUNDO.md
+
+   "Preciso de um checklist"
+   └─ CHECKLIST_DESCOBERTA.md
+
+   "Quero referência visual"
+   └─ INDICE_VISUAL.txt
+
+   "Quero índice de arquivos"
+   └─ INDICE_ARQUIVOS.md
+
+
+📂 ESTRUTURA DE ARQUIVOS
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   agentes-admissao/
+   ├── README_DESCOBERTA.md ⭐ COMECE AQUI
+   ├── QUICK_START.md
+   ├── SUMARIO_FINAL.md
+   ├── INDICE_ARQUIVOS.md
+   ├── MAPA_NAVEGACAO.md
+   ├── INDICE_VISUAL.txt
+   ├── INDICE_RAPIDO.txt (você está aqui)
+   ├── RESUMO_SCRIPTS.md
+   ├── INDICE_SCRIPTS.md
+   ├── DESCOBERTA_MUNDO.md
+   ├── CHECKLIST_DESCOBERTA.md
+   └── scripts/
+       ├── __init__.py
+       ├── testar_conexao.py
+       ├── descobrir_mundo.py
+       ├── descobrir_mundo_http.py ⭐ RECOMENDADO
+       ├── exemplo_uso.sh
+       ├── README.md
+       └── TECNICO.md
+
+
+🎯 PROCEDIMENTO RÁPIDO
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   1. Leia README_DESCOBERTA.md (3 min)
+   2. Leia QUICK_START.md (2 min)
+   3. Execute: python scripts/testar_conexao.py
+   4. Execute: python scripts/descobrir_mundo_http.py
+   5. Reinicie o servidor MCP
+   6. Revise docs/ferramentas.json, docs/bases.json, docs/exemplos/
+
+
+⚠️  AVISOS IMPORTANTES
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   • A primeira chamada ao servidor liga o relógio simulado
+   • Você DEVE reiniciar o servidor depois de executar o script
+   • Não execute o script mais de uma vez sem reiniciar
+   • Se algo der errado, reinicie o servidor e tente novamente
+
+
+📊 ESTATÍSTICAS
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   Arquivos criados:
+   ├─ 7 scripts Python/Shell
+   ├─ 11 arquivos de documentação
+   ├─ 2 diretórios
+   └─ Total: ~100 KB
+
+   Tempo:
+   ├─ Leitura: ~50 minutos
+   ├─ Execução: ~5 minutos
+   └─ Total: ~55 minutos
+
+
+✨ PRÓXIMOS PASSOS
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   1. Implementar core/mcp_cliente.py
+   2. Implementar core/llm.py
+   3. Implementar core/memoria.py
+   4. Implementar grafo/
+   5. Implementar agentes/
+
+
+📞 SUPORTE
+═══════════════════════════════════════════════════════════════════════════════════════════════
+
+   Se tiver dúvidas:
+   1. Procure neste índice
+   2. Leia a seção relevante
+   3. Consulte o checklist
+   4. Revise o código
+
+
+╔════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                ║
+║                              Status: ✅ Pronto para uso                                       ║
+║                              Versão: 1.0                                                      ║
+║                              Data: 2024-01-15                                                 ║
+║                                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════════════════════╝

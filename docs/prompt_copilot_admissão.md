@@ -1,14 +1,20 @@
-Prompts para o GitHub Copilot — Agentes de Admissão
-Antes de começar
-Crie o repositório e copie para ele o arquivo prompts_admissao_3_agentes_gpt4omini.md, salvo como docs/prompts_agentes.md.
-Crie o arquivo .github/copilot-instructions.md com o conteúdo da seção 0 abaixo. O Copilot lê esse arquivo sozinho em todo pedido, então não precisa repetir o contexto.
-Use o Copilot Chat em modo Agent e envie os prompts um por vez, na ordem. Teste cada etapa antes de seguir.
-Modelo no Copilot: Haiku 4.5 por padrão; troque para Sonnet 5 nas etapas marcadas com ⚙️.
-Deixe abertos só os arquivos da etapa (contexto menor, custo menor).
-Dois ambientes virtuais separados: um para o servidor (usa mcp 2.x) e outro para os agentes. Se alguma biblioteca de agente pedir mcp 1.x, ela fica só no ambiente dos agentes.
-Durante o desenvolvimento, suba o servidor com o relógio mais lento: SEGUNDOS_POR_DIA=600 (no padrão, um dia do Tema 2 passa em 2 minutos e uma hora simulada em 12 segundos).
-0. .github/copilot-instructions.md
-markdown
+# Prompts para o GitHub Copilot — Agentes de Admissão
+
+## Antes de começar
+
+1. Crie o repositório e copie para ele o arquivo `prompts_admissao_3_agentes_gpt4omini.md`, salvo como `docs/prompts_agentes.md`.
+2. Crie o arquivo `.github/copilot-instructions.md` com o conteúdo da seção 0 abaixo. O Copilot lê esse arquivo sozinho em todo pedido, então não precisa repetir o contexto.
+3. Use o **Copilot Chat em modo Agent** e envie os prompts **um por vez, na ordem**. Teste cada etapa antes de seguir.
+4. Modelo no Copilot: **Haiku 4.5** por padrão; troque para **Sonnet 5** nas etapas marcadas com ⚙️.
+5. Deixe abertos só os arquivos da etapa (contexto menor, custo menor).
+6. **Dois ambientes virtuais separados:** um para o servidor (usa `mcp` 2.x) e outro para os agentes. Se alguma biblioteca de agente pedir `mcp` 1.x, ela fica só no ambiente dos agentes.
+7. Durante o desenvolvimento, suba o servidor com o relógio mais lento: `SEGUNDOS_POR_DIA=600` (no padrão, um dia do Tema 2 passa em 2 minutos e uma hora simulada em 12 segundos).
+
+---
+
+## 0. `.github/copilot-instructions.md`
+
+```markdown
 # Projeto: time de agentes de Admissão (Hackathon UNIFEI, Tema 2)
 
 ## Contexto
@@ -23,14 +29,17 @@ Os prompts e schemas JSON de cada tarefa estão em docs/prompts_agentes.md. Copi
 ## Arquitetura: LangGraph híbrido
 - LangGraph orquestra o atendimento de CADA evento ou tarefa de prazo: classificar → rotear → produzir (conferente ou comunicador) → revisar (coordenador) → executar, corrigir (1 vez) ou escalar; propostas ao RH pausam com interrupt() até a decisão.
 - Fora do grafo, em Python puro: laço de proximo_evento, cliente MCP com tratamento de falhas, varredura de prazos, regras fixas, contador de custo.
-- Os nós chamam o gpt-4o-mini direto pelo SDK da OpenAI com schema fixo. NÃO usar LangChain agents, create_react_agent, tool calling automático nem adaptadores MCP do LangChain: o código decide qual ferramenta MCP chamar.
+- CONEXÃO JÁ VALIDADA (agente.py na raiz — NÃO alterar esse arquivo nem o jeito de conectar): MultiServerMCPClient do langchain_mcp_adapters, {"mundo": {"transport": "streamable_http", "url": MCP_URL, "timeout": timedelta(seconds=60)}}, e modelo por init_chat_model(MODELO, base_url=LITELLM_URL, api_key=LITELLM_API_KEY) pelo gateway LiteLLM. Todo código novo reutiliza exatamente essa conexão.
+- As ferramentas vêm de `await cliente.get_tools()`; o código guarda um dicionário {nome: ferramenta} e chama cada uma DIRETO com `await ferramenta.ainvoke({...})`. O LLM não escolhe ferramentas: NÃO usar create_agent nem create_react_agent no fluxo principal (o create_agent fica só no agente.py de exemplo). Quem decide qual ferramenta chamar é o código do grafo.
+- Os nós chamam o modelo com `modelo.with_structured_output(SchemaPydantic, include_raw=True)` para receber JSON validado e o uso de tokens.
 - Estado do grafo salvo com checkpointer SQLite (data/grafo.db); thread_id = id do evento ou da tarefa.
 - Cada nó informa qual agente agiu (coordenador, conferente ou comunicador) e esse nome vai no campo `agente` das chamadas MCP.
 
 ## Stack
 - langgraph e langgraph-checkpoint-sqlite (versões estáveis mais recentes; usar StateGraph, add_conditional_edges, interrupt, Command(resume=...) e AsyncSqliteSaver).
-- Python 3.11+, OpenAI Python SDK, modelo gpt-4o-mini, temperatura 0.1, Structured Outputs (response_format com schema estrito).
-- Cliente MCP: pacote oficial `mcp` (streamable HTTP), timeout de 15 s ou mais.
+- Python 3.11+, langchain, langchain-mcp-adapters, langchain-openai (as mesmas versões já instaladas que fazem o agente.py funcionar; não trocar versões).
+- Modelo: MODELO do .env (padrão "openai:gpt-4o-mini") via init_chat_model com LITELLM_URL e LITELLM_API_KEY, temperatura 0.1, saída estruturada com with_structured_output.
+- Cliente MCP: MultiServerMCPClient (langchain_mcp_adapters), transporte streamable_http, timeout de 60 s, como no agente.py.
 - pydantic para os schemas, sqlite3 para memória, playwright para o portal, streamlit para o canal humano, python-dotenv para a chave.
 
 ## Regras obrigatórias do código
@@ -39,8 +48,8 @@ Os prompts e schemas JSON de cada tarefa estão em docs/prompts_agentes.md. Copi
 - Falhas: 503 → retry com backoff (2, 4, 8 s, máx. 4); 504 em consulta → repetir; 504 em ação → consultar antes de repetir; 409 → consultar de novo e reavaliar; 400/404/405/422 → não repetir igual, logar e devolver erro; 410 → parar ações.
 - Regras fixas ficam em código, não no LLM: prazos em dias úteis, mudança de data/dado sensível/desistência sempre escalam, CNH nunca vale como RG, checagem de destinatário antes de todo envio.
 - Sem evento novo, não chamar o LLM.
-- Controle de custo: somar `usage` de cada resposta; parar se uma rodada passar de US$ 0,50 ou se um evento passar de 5 chamadas ao LLM.
-- A chave fica em .env (OPENAI_API_KEY), nunca no código. .env no .gitignore.
+- Controle de custo: somar o uso de tokens de cada resposta (usage_metadata da mensagem crua retornada com include_raw=True); parar se uma rodada passar de US$ 0,50 ou se um evento passar de 5 chamadas ao LLM.
+- Configuração em .env (já existe; nunca no código; .env no .gitignore): MCP_URL, MODELO, LITELLM_URL, LITELLM_API_KEY. Ler com python-dotenv como no agente.py.
 - Não escrever no código a resposta de eventos específicos do cenário de treino.
 - Código simples, funções pequenas, comentários em português.
 
@@ -77,8 +86,13 @@ Os prompts e schemas JSON de cada tarefa estão em docs/prompts_agentes.md. Copi
 - Equipamentos e TI recebem nome, cargo e data de início. Monitor é para desenvolvimento e design.
 - Pedido de mudança da data de início escala SEMPRE, venha do contratado ou do gestor (ex.: gestor pedindo para adiantar).
 - FAQ (docs/faq.json): campos id, pergunta, resposta, palavras_chave (com acento). Responder contratado só com o texto de `resposta`.
-1. Estrutura do projeto
-text
+```
+
+---
+
+## 1. Estrutura do projeto
+
+```text
 Crie a estrutura inicial do projeto conforme .github/copilot-instructions.md:
 
 agentes/
@@ -109,34 +123,44 @@ requirements.txt
 .gitignore
 README.md
 
-Só crie os arquivos com docstrings e TODOs, sem implementar ainda. Preencha requirements.txt, .env.example e .gitignore.
-2. Descobrir o mundo
-text
+Só crie os arquivos com docstrings e TODOs, sem implementar ainda. Preencha requirements.txt (langchain, langchain-mcp-adapters, langchain-openai, langgraph, langgraph-checkpoint-sqlite, pydantic, playwright, streamlit, python-dotenv, pytest — sem trocar as versões que já fazem o agente.py funcionar), .env.example (MCP_URL, MODELO, LITELLM_URL, LITELLM_API_KEY) e .gitignore. Não altere agente.py.
+```
+
+## 2. Descobrir o mundo
+
+```text
 Crie scripts/descobrir_mundo.py que:
-1. Conecta ao servidor MCP em http://localhost:8765/mcp usando o pacote `mcp`.
+1. Conecta ao servidor MCP do mesmo jeito que o agente.py (MultiServerMCPClient, streamable_http, MCP_URL do .env).
 2. Lista as ferramentas disponíveis e salva nome, descrição e parâmetros em docs/ferramentas.json.
 3. Chama listar_bases com agente="setup" e salva o resultado em docs/bases.json.
 4. Para cada base, chama consultar com limite=3 e salva exemplos em docs/exemplos/<base>.json.
 Imprima um resumo no terminal. Atenção: a primeira chamada liga o relógio simulado, então rode isto com o servidor recém-iniciado e reinicie o servidor depois.
+```
 
-Depois de rodar, abra docs/bases.json e docs/ferramentas.json no editor: os próximos prompts usam esses arquivos como referência.
+> Depois de rodar, abra `docs/bases.json` e `docs/ferramentas.json` no editor: os próximos prompts usam esses arquivos como referência.
 
-3. Cliente MCP com tratamento de falhas ⚙️
-text
+## 3. Cliente MCP com tratamento de falhas ⚙️
+
+```text
 Implemente core/mcp_cliente.py, usando docs/ferramentas.json como referência dos parâmetros.
 
-Classe ClienteMCP(nome_agente) com:
-- chamar(ferramenta, args, motivo, evento_id=None, eh_acao=False): sempre injeta agente e motivo; injeta evento_id quando informado.
+NÃO altere agente.py. Reutilize exatamente a conexão dele: MultiServerMCPClient do langchain_mcp_adapters com {"mundo": {"transport": "streamable_http", "url": MCP_URL, "timeout": timedelta(seconds=60)}}, MCP_URL vindo do .env. Uma única conexão compartilhada pelos três agentes: `ferramentas = await cliente.get_tools()` uma vez, guardadas num dicionário {nome: ferramenta}.
+
+Classe ClienteMCP(nome_agente, ferramentas) com:
+- chamar(ferramenta, args, motivo, evento_id=None, eh_acao=False): monta {**args, "agente": nome_agente, "motivo": motivo, "evento_id": evento_id se houver} e executa `await ferramentas[ferramenta].ainvoke(payload)`. O retorno do adaptador pode vir como texto JSON, lista de blocos de conteúdo ou dict: normalize para dict. Exceções do adaptador (ToolException ou erro de transporte) também devem ser convertidas em Resposta com o código de erro quando ele aparecer na mensagem.
 - Tratamento de falhas exatamente como em copilot-instructions.md. Para 504 em ação, receba uma função `verificar` opcional que consulta se a ação já foi feita antes de repetir. Para enviar_mensagem, o verificar padrão consulta a base `mensagens` (destinatário + assunto + evento_id).
 - registrar_conversa não passa pelo retry (não sofre falha simulada). Erro 500 não tem retry: loga e levanta exceção.
 - Ler `status`, `codigo`, `mensagem` e `agora` de toda resposta; devolver um objeto Resposta(ok, dados, codigo, mensagem, agora).
-- Timeout de 20 s.
+- Timeout de 60 s (o da conexão).
 - Atalhos: proximo_evento(esperar=8), ler_evento, consultar, registrar, atualizar, enviar_mensagem, responder_evento, registrar_conversa(de, para, texto).
 - Guarda o último `agora` recebido em self.agora.
 - Log de cada chamada em logs/agentes.jsonl (agente, ferramenta, status, motivo, tempo).
 Inclua um teste rápido em scripts/testar_mcp.py.
-4. Memória
-text
+```
+
+## 4. Memória
+
+```text
 Implemente core/memoria.py com sqlite3 (arquivo data/memoria.db):
 
 Tabela casos: contratado_id, nome, data_inicio, fase, etapas (JSON com status de cada etapa do checklist: pendente/feito/risco e data), documentos (JSON: tipo, status, motivo), ultimo_contato_contratado, ultima_cobranca, propostas_abertas (JSON), escalacoes_abertas (JSON), atualizado_em.
@@ -146,11 +170,13 @@ Tabela escalacoes: id, contratado_id, regra, conteudo (JSON), status, resolvido_
 
 Funções: carregar_caso, salvar_caso, resumo_caso(contratado_id, campos) que devolve só os campos pedidos (para mandar ao LLM com pouco contexto), adicionar_licao, listar_licoes(limite=5), criar_aprovacao, aprovacoes_decididas, criar_escalacao.
 Inicialize os casos a partir das bases de contratados e checklist (ver docs/bases.json).
-5. Prazos em dias úteis
+```
 
-Salve o checklist recebido do servidor em docs/checklist.json antes de enviar este prompt.
+## 5. Prazos em dias úteis
 
-text
+> Salve o checklist recebido do servidor em `docs/checklist.json` antes de enviar este prompt.
+
+```text
 Implemente core/prazos.py. As etapas e prazos NÃO ficam fixos no código: vêm da base de checklist do servidor (consultar no início da rodada; formato em docs/checklist.json).
 
 Formato de cada item: id, fase, etapa, prazo_dias_uteis_antes (int ou null), quando (texto opcional), quem.
@@ -176,22 +202,29 @@ varredura(casos, checklist, agora) → lista de ações pendentes, cada uma com 
 - Não repetir a mesma ação no mesmo dia útil (consultar ultima_cobranca na memória).
 
 Sem LLM neste arquivo. Inclua testes em tests/test_prazos.py usando docs/checklist.json e datas de exemplo (incluindo uma semana com fim de semana no meio).
-6. Chamada ao LLM com custo controlado
-text
+```
+
+## 6. Chamada ao LLM com custo controlado
+
+```text
 Implemente core/llm.py e core/schemas.py.
 
 schemas.py: modelos pydantic para cada saída de docs/prompts_agentes.md: ClassificacaoEvento, RevisaoAcao, Escalacao, ConferenciaDocumento, PacoteContabilidade, Mensagem. Use Literal para os enums.
 
 llm.py:
-- executar(tarefa, contexto: dict, schema) → carrega prompts/base.md + prompts/<tarefa>.md, substitui as variáveis {…}, chama gpt-4o-mini com temperature=0.1 e response_format estruturado com o schema.
-- Parte fixa do prompt sempre no início e variáveis no fim (aproveita o cache automático da OpenAI).
-- max_tokens por tarefa (ex.: 300 para classificar, 600 para redigir mensagem).
+- Modelo criado UMA vez exatamente como no agente.py: init_chat_model(MODELO, base_url=os.environ["LITELLM_URL"], api_key=os.environ["LITELLM_API_KEY"]), com temperature=0.1. Não usar o SDK da OpenAI direto nem OPENAI_API_KEY.
+- executar(tarefa, contexto: dict, schema) → carrega prompts/base.md + prompts/<tarefa>.md, substitui as variáveis {…} e chama `modelo.with_structured_output(schema, include_raw=True).ainvoke(mensagens)`; devolve o objeto "parsed" e lê o uso de tokens em raw.usage_metadata.
+- Parte fixa do prompt sempre no início e variáveis no fim (aproveita o cache do provedor).
+- max_tokens por tarefa (ex.: 300 para classificar, 600 para redigir mensagem), via .bind(max_tokens=...) ou parâmetro equivalente.
 - Se a saída não validar no schema, tenta mais 1 vez; se falhar, devolve None (quem chamou escala).
 - Contador global de custo (US$ 0,15 por 1M de entrada, US$ 0,075 em cache, US$ 0,60 por 1M de saída) com limite por rodada e por evento, como em copilot-instructions.md. Ao estourar, lança LimiteCustoExcedido.
 - Loga tarefa, tokens e custo em logs/custo.jsonl.
 Crie os arquivos prompts/*.md copiando os textos de docs/prompts_agentes.md, um por tarefa.
-7. Regras fixas
-text
+```
+
+## 7. Regras fixas
+
+```text
 Implemente core/regras.py, sem LLM:
 - forcar_roteamento(evento, classificacao): se o texto do evento indicar mudança de data de início, desistência ou dado sensível (lista de palavras-chave), força encaminhar_para="escalar_rh", mesmo que o LLM diga outra coisa.
 - Documentos: NÃO fixar a lista no código. Carregar da base de documentos exigidos do servidor (formato em docs/documentos_exigidos.json: tipo, nome, regra, exigido, palavras), com docs/documentos_exigidos.json como reserva.
@@ -215,8 +248,11 @@ Implemente core/regras.py, sem LLM:
 - checar_privacidade(mensagem, destinatario): detecta CPF, RG e endereço por regex e bloqueia se o destinatário não puder receber.
 - nivel_acao(tipo_acao) → "faz_sozinho" | "propoe" | "escala", conforme a tabela de níveis do Tema 2.
 Inclua testes em tests/test_regras.py.
-8. Os três agentes ⚙️
-text
+```
+
+## 8. Os três agentes ⚙️
+
+```text
 Implemente agentes/coordenador.py, agentes/conferente.py e agentes/comunicador.py, usando core/*.
 Estes arquivos têm só as capacidades de cada agente (funções que recebem dados e devolvem resultado). A orquestração (quem chama quem, revisão, correção, aprovação) fica no grafo da etapa 9, não aqui.
 
@@ -243,8 +279,11 @@ comunicador:
 - enviar(mensagem, evento_id) → enviar_mensagem ou responder_evento.
 
 Ações que precisam de revisão (o grafo da etapa 9 garante): recusa de documento, mensagem com dado pessoal, mensagem fora do FAQ, proposta ao RH e envio ao portal.
-9. Grafo de atendimento (LangGraph) ⚙️
-text
+```
+
+## 9. Grafo de atendimento (LangGraph) ⚙️
+
+```text
 Implemente grafo/estado.py, grafo/nos.py e grafo/grafo.py com LangGraph, conforme a seção "Arquitetura: LangGraph híbrido" de copilot-instructions.md.
 
 estado.py — TypedDict EstadoAtendimento:
@@ -279,8 +318,11 @@ grafo.py — arestas:
   - Função exportar_diagrama() que salva grafo.get_graph().draw_mermaid() em docs/grafo.md (para o README e a apresentação).
   - Limite de passos do grafo (recursion_limit) baixo, por exemplo 25, para evitar laço infinito.
 Inclua tests/test_grafo.py simulando um documento inválido (CNH como RG), uma divergência (comprovante em nome de outra pessoa) e uma mensagem com CPF para o gestor (deve ir para corrigir).
-10. Laço principal ⚙️
-text
+```
+
+## 10. Laço principal ⚙️
+
+```text
 Implemente main.py (asyncio):
 1. Carrega .env, cria um ClienteMCP para cada agente, inicializa a memória e compila o grafo.
    - Recuperação: listar_eventos com status "lido" e rodar o grafo para os que ainda não têm ação (o agente pode ter caído no meio).
@@ -293,19 +335,24 @@ Implemente main.py (asyncio):
 3. Erro 410 → para as ações e imprime um resumo final (casos, escalações, custo total).
 4. Ctrl+C encerra com segurança (o checkpointer já guardou o estado).
 Execução: `python main.py`. Logs legíveis no terminal: [hora simulada] agente → nó → ação (motivo).
-11. Canal humano
-text
+```
+
+## 11. Canal humano
+
+```text
 Implemente painel/app.py com Streamlit, lendo e gravando data/memoria.db:
 - Aba "Aprovações": lista as pendentes com contexto e botões Aprovar e Recusar, com campo de nome de quem decidiu e comentário. O painel só grava a decisão na tabela aprovacoes; quem retoma o grafo pausado é o main.py.
 - Aba "Escalações": lista as abertas no formato de escalação (situação, já feito, risco, decisão necessária, opções), com campo de resposta e botão Resolver.
 - Aba "Risco do primeiro dia": tabela com os 5 contratados, D-n e o status dos 5 itens de checagem, colorindo verde, amarelo e vermelho.
 - Atualiza sozinho a cada 5 s.
 Execução: `streamlit run painel/app.py`.
-12. Portal da contabilidade ⚙️
+```
 
-Antes deste prompt, abra http://localhost:8765/legado no navegador, veja a tela do portal e anote os campos e botões (ou salve o HTML da página em docs/portal.html).
+## 12. Portal da contabilidade ⚙️
 
-text
+> Antes deste prompt, abra http://localhost:8765/legado no navegador, veja a tela do portal e anote os campos e botões (ou salve o HTML da página em `docs/portal.html`).
+
+```text
 Implemente portal/contabilidade.py com Playwright (sync API), usando docs/portal.html como referência:
 - enviar_dados(pacote: PacoteContabilidade, agente="conferente", evento_id=None) → abre http://localhost:8765/legado, navega até o Portal da Contabilidade, preenche o campo do nome do agente (o formulário exige), preenche cada campo com os valores do pacote, relê os campos preenchidos e compara com o pacote antes de enviar.
 - Tela não sofre falha simulada; erro 410 significa cenário encerrado (parar).
@@ -313,8 +360,11 @@ Implemente portal/contabilidade.py com Playwright (sync API), usando docs/portal
 - Antes de enviar, verifica se o contratado já consta como enviado (evita duplicar em caso de erro ou timeout).
 - headless configurável por variável de ambiente (HEADLESS=0 para mostrar na demo).
 Só é chamado depois de coordenador.revisar aprovar o pacote.
-13. README e entrega
-text
+```
+
+## 13. README e entrega
+
+```text
 Escreva o README.md:
 - O que o projeto faz, em 3 linhas.
 - Como rodar com um comando (servidor MCP com TEMA=admissao, depois `python main.py` e `streamlit run painel/app.py`).
@@ -324,33 +374,40 @@ Escreva o README.md:
 - Como funcionam memória, escalação, aprovação e tratamento de falhas.
 - Custo médio por rodada (ler de logs/custo.jsonl).
 - O que faríamos com mais tempo.
-Ordem de testes
-Etapas 1–3 → scripts/testar_mcp.py com ERROS=0.
-Etapas 4–7 → pytest.
-Etapas 8–9 → pytest tests/test_grafo.py e conferir docs/grafo.md.
-Etapa 10 → servidor com SEM_CENARIO=1 SEGUNDOS_POR_DIA=600, criando eventos pelo botão + Novo evento.
-Etapas 11–12 → testar a pausa para aprovação (aprovar no painel e ver o grafo retomar) e o envio ao portal.
-Cenário completo com SEED=42 e falhas ligadas: o mesmo sorteio a cada rodada facilita comparar antes e depois de uma correção.
-Cenário completo no relógio padrão (20 min), como na apresentação. Conferir o painel, python ver_log.py --erros e logs/custo.jsonl.
-Matriz de testes com o cenário de treino
+```
 
-Use estes casos para conferir o comportamento no painel. Não escreva no código nenhuma resposta específica para eles: o comportamento tem que sair das regras gerais.
+---
 
-Evento	Comportamento esperado
-PED-001 a 005 (aceites)	Admissão iniciada; TI, equipamentos e clínica acionados já no 1º dia; pedido de documentos a quem ainda não mandou
-PED-006 (Beatriz, tudo certo)	Todos conferidos → pacote → revisão → portal
-PED-008 / PED-023 (Thiago)	Detecta falta de foto 3x4 e certificado militar; cobra; certidão do filho aceita
-PED-009 (CTPS digital)	Responde com FAQ-02 antes da cobrança chegar
-PED-010 (Larissa, CNH como RG)	Recusa com o motivo (FAQ-01) e pede o RG frente e verso
-PED-011 / ADM-05 (comprovante no nome do marido)	Divergência → proposta ao RH, sem aceitar nem recusar sozinho
-PED-012, 014, 015, 018, 019, 021, 025, 026, 030	Resposta só com o FAQ certo
-PED-007, PED-013 (gestores perguntando)	Resposta com dados das bases; acessos específicos repassados à TI
-PED-016 (Beatriz pede outra data)	Escala ao RH; nada é alterado sem OK
-PED-020 (gestora quer adiantar a Camila)	Também é mudança de data → escala
-PED-017, PED-024 (equipamentos, kit com monitor)	Envia nome, cargo e data de início; repassa monitor e licença
-PED-022, PED-029 (Diego sumiu)	Cobra em 2 dias úteis, escala em 4; responde ao gestor sem prometer
-PED-027 (lembrete da contabilidade)	Responde confirmando, sem mandar dado por e-mail
-PED-028 (exame da Larissa)	Não deveria acontecer se a clínica foi acionada cedo
-ADM-05 (contrato)	Cobra a assinatura de novo até assinar
+## Ordem de testes
 
-Para testar casos difíceis (documento inválido, mudança de data, contratado que some), copie dados/admissao/treino.json, crie pedidos extras e suba com --cenario meu_cenario.json. Isso é permitido pelas regras, desde que sem dados reais.
+1. Etapas 1–3 → `scripts/testar_mcp.py` com `ERROS=0`.
+2. Etapas 4–7 → `pytest`.
+3. Etapas 8–9 → `pytest tests/test_grafo.py` e conferir `docs/grafo.md`.
+4. Etapa 10 → servidor com `SEM_CENARIO=1 SEGUNDOS_POR_DIA=600`, criando eventos pelo botão **+ Novo evento**.
+5. Etapas 11–12 → testar a pausa para aprovação (aprovar no painel e ver o grafo retomar) e o envio ao portal.
+6. Cenário completo com `SEED=42` e falhas ligadas: o mesmo sorteio a cada rodada facilita comparar antes e depois de uma correção.
+7. Cenário completo no relógio padrão (20 min), como na apresentação. Conferir o painel, `python ver_log.py --erros` e `logs/custo.jsonl`.
+
+### Matriz de testes com o cenário de treino
+
+Use estes casos para conferir o comportamento no painel. **Não** escreva no código nenhuma resposta específica para eles: o comportamento tem que sair das regras gerais.
+
+| Evento | Comportamento esperado |
+|---|---|
+| PED-001 a 005 (aceites) | Admissão iniciada; TI, equipamentos e clínica acionados já no 1º dia; pedido de documentos a quem ainda não mandou |
+| PED-006 (Beatriz, tudo certo) | Todos conferidos → pacote → revisão → portal |
+| PED-008 / PED-023 (Thiago) | Detecta falta de foto 3x4 e certificado militar; cobra; certidão do filho aceita |
+| PED-009 (CTPS digital) | Responde com FAQ-02 antes da cobrança chegar |
+| PED-010 (Larissa, CNH como RG) | Recusa com o motivo (FAQ-01) e pede o RG frente e verso |
+| PED-011 / ADM-05 (comprovante no nome do marido) | Divergência → proposta ao RH, sem aceitar nem recusar sozinho |
+| PED-012, 014, 015, 018, 019, 021, 025, 026, 030 | Resposta só com o FAQ certo |
+| PED-007, PED-013 (gestores perguntando) | Resposta com dados das bases; acessos específicos repassados à TI |
+| PED-016 (Beatriz pede outra data) | Escala ao RH; nada é alterado sem OK |
+| PED-020 (gestora quer adiantar a Camila) | Também é mudança de data → escala |
+| PED-017, PED-024 (equipamentos, kit com monitor) | Envia nome, cargo e data de início; repassa monitor e licença |
+| PED-022, PED-029 (Diego sumiu) | Cobra em 2 dias úteis, escala em 4; responde ao gestor sem prometer |
+| PED-027 (lembrete da contabilidade) | Responde confirmando, sem mandar dado por e-mail |
+| PED-028 (exame da Larissa) | Não deveria acontecer se a clínica foi acionada cedo |
+| ADM-05 (contrato) | Cobra a assinatura de novo até assinar |
+
+Para testar casos difíceis (documento inválido, mudança de data, contratado que some), copie `dados/admissao/treino.json`, crie pedidos extras e suba com `--cenario meu_cenario.json`. Isso é permitido pelas regras, desde que sem dados reais.

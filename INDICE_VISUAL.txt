@@ -1,0 +1,177 @@
+╔════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                ║
+║                  ✅ SCRIPTS DE DESCOBERTA DO MUNDO MCP - ÍNDICE VISUAL                       ║
+║                                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+
+📚 DOCUMENTAÇÃO DISPONÍVEL:
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🚀 COMECE AQUI (Tempo: 2 minutos)                                                             │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│  📄 QUICK_START.md                                                                           │
+│     └─ Guia rápido de 5 minutos                                                              │
+│     └─ Procedimento passo a passo                                                            │
+│     └─ Troubleshooting rápido                                                                │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🗺️  NAVEGAÇÃO (Tempo: 5 minutos)                                                              │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│  📄 MAPA_NAVEGACAO.md                                                                        │
+│     └─ Fluxo de leitura recomendado                                                          │
+│     └─ Matriz de documentação                                                                │
+│     └─ Aprendizado progressivo                                                               │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 📊 RESUMO (Tempo: 5 minutos)                                                                  │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│  📄 RESUMO_SCRIPTS.md                                                                        │
+│     └─ Resumo visual do que foi criado                                                       │
+│     └─ Estatísticas                                                                          │
+│     └─ Próximos passos                                                                       │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 📖 ÍNDICE COMPLETO (Tempo: 10 minutos)                                                        │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│  📄 INDICE_SCRIPTS.md                                                                        │
+│     └─ Índice completo de todos os scripts                                                   │
+│     └─ Descrição detalhada de cada arquivo                                                   │
+│     └─ Matriz de referência                                                                  │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 📚 GUIA DETALHADO (Tempo: 15 minutos)                                                         │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│  📄 DESCOBERTA_MUNDO.md                                                                      │
+│     └─ Guia detalhado de uso                                                                 │
+│     └─ Procedimento completo                                                                 │
+│     └─ Troubleshooting avançado                                                              │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ ✅ CHECKLIST (Tempo: 5 minutos)                                                               │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│  📄 CHECKLIST_DESCOBERTA.md                                                                  │
+│     └─ Checklist de 4 fases                                                                  │
+│     └─ Validação de cada fase                                                                │
+│     └─ Próximos passos                                                                       │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🔧 SCRIPTS (Tempo: 10 minutos)                                                                │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│  📄 scripts/README.md                                                                        │
+│     └─ Documentação dos scripts                                                              │
+│     └─ Como usar cada script                                                                 │
+│     └─ Exemplos de uso                                                                       │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🛠️  TÉCNICO (Tempo: 10 minutos)                                                               │
+├────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                                │
+│  📄 scripts/TECNICO.md                                                                       │
+│     └─ Documentação técnica                                                                  │
+│     └─ Detalhes de implementação                                                             │
+│     └─ Troubleshooting técnico                                                               │
+│                                                                                                │
+└────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+🎯 FLUXO DE LEITURA RECOMENDADO:
+
+   Iniciante (15 min)
+   ├─ QUICK_START.md (2 min)
+   ├─ RESUMO_SCRIPTS.md (5 min)
+   ├─ Executar scripts (5 min)
+   └─ Reiniciar servidor (1 min)
+
+   Intermediário (30 min)
+   ├─ QUICK_START.md (2 min)
+   ├─ MAPA_NAVEGACAO.md (5 min)
+   ├─ INDICE_SCRIPTS.md (10 min)
+   ├─ scripts/README.md (5 min)
+   └─ Executar e verificar (8 min)
+
+   Avançado (45 min)
+   ├─ DESCOBERTA_MUNDO.md (15 min)
+   ├─ scripts/TECNICO.md (10 min)
+   ├─ CHECKLIST_DESCOBERTA.md (5 min)
+   └─ Revisar código (15 min)
+
+
+📊 ESTATÍSTICAS:
+
+   Documentação:
+   ├─ 6 arquivos de documentação
+   ├─ ~40 KB de conteúdo
+   ├─ ~50 minutos de leitura
+   └─ Todos os tópicos cobertos
+
+   Scripts:
+   ├─ 7 arquivos Python/Shell
+   ├─ ~20 KB de código
+   ├─ 3 implementações diferentes
+   └─ Pronto para uso
+
+
+🚀 PROCEDIMENTO RÁPIDO:
+
+   1. Leia QUICK_START.md (2 min)
+   2. Execute: python scripts/testar_conexao.py
+   3. Execute: python scripts/descobrir_mundo_http.py
+   4. Reinicie o servidor MCP
+   5. Revise docs/ferramentas.json, docs/bases.json, docs/exemplos/
+
+
+⚠️  AVISOS IMPORTANTES:
+
+   • A primeira chamada ao servidor liga o relógio simulado
+   • Você DEVE reiniciar o servidor depois de executar o script
+   • Não execute o script mais de uma vez sem reiniciar
+   • Se algo der errado, reinicie o servidor e tente novamente
+
+
+✨ PRÓXIMOS PASSOS:
+
+   1. Implementar core/mcp_cliente.py
+   2. Implementar core/llm.py
+   3. Implementar core/memoria.py
+   4. Implementar grafo/
+   5. Implementar agentes/
+
+
+📞 SUPORTE:
+
+   Se tiver dúvidas:
+   1. Procure no índice (INDICE_SCRIPTS.md)
+   2. Leia a seção relevante (DESCOBERTA_MUNDO.md)
+   3. Consulte o checklist (CHECKLIST_DESCOBERTA.md)
+   4. Revise o código (scripts/)
+
+
+╔════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                                ║
+║                              Status: ✅ Pronto para uso                                       ║
+║                              Versão: 1.0                                                      ║
+║                              Data: 2024-01-15                                                 ║
+║                                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════════════════════╝

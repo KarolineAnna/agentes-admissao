@@ -12,14 +12,17 @@ Os prompts e schemas JSON de cada tarefa estão em docs/prompts_agentes.md. Copi
 ## Arquitetura: LangGraph híbrido
 - LangGraph orquestra o atendimento de CADA evento ou tarefa de prazo: classificar → rotear → produzir (conferente ou comunicador) → revisar (coordenador) → executar, corrigir (1 vez) ou escalar; propostas ao RH pausam com interrupt() até a decisão.
 - Fora do grafo, em Python puro: laço de proximo_evento, cliente MCP com tratamento de falhas, varredura de prazos, regras fixas, contador de custo.
-- Os nós chamam o gpt-4o-mini direto pelo SDK da OpenAI com schema fixo. NÃO usar LangChain agents, create_react_agent, tool calling automático nem adaptadores MCP do LangChain: o código decide qual ferramenta MCP chamar.
+- CONEXÃO JÁ VALIDADA (agente.py na raiz — NÃO alterar esse arquivo nem o jeito de conectar): MultiServerMCPClient do langchain_mcp_adapters, {"mundo": {"transport": "streamable_http", "url": MCP_URL, "timeout": timedelta(seconds=60)}}, e modelo por init_chat_model(MODELO, base_url=LITELLM_URL, api_key=LITELLM_API_KEY) pelo gateway LiteLLM. Todo código novo reutiliza exatamente essa conexão.
+- As ferramentas vêm de `await cliente.get_tools()`; o código guarda um dicionário {nome: ferramenta} e chama cada uma DIRETO com `await ferramenta.ainvoke({...})`. O LLM não escolhe ferramentas: NÃO usar create_agent nem create_react_agent no fluxo principal (o create_agent fica só no agente.py de exemplo). Quem decide qual ferramenta chamar é o código do grafo.
+- Os nós chamam o modelo com `modelo.with_structured_output(SchemaPydantic, include_raw=True)` para receber JSON validado e o uso de tokens.
 - Estado do grafo salvo com checkpointer SQLite (data/grafo.db); thread_id = id do evento ou da tarefa.
 - Cada nó informa qual agente agiu (coordenador, conferente ou comunicador) e esse nome vai no campo `agente` das chamadas MCP.
 
 ## Stack
 - langgraph e langgraph-checkpoint-sqlite (versões estáveis mais recentes; usar StateGraph, add_conditional_edges, interrupt, Command(resume=...) e AsyncSqliteSaver).
-- Python 3.11+, OpenAI Python SDK, modelo gpt-4o-mini, temperatura 0.1, Structured Outputs (response_format com schema estrito).
-- Cliente MCP: pacote oficial `mcp` (streamable HTTP), timeout de 15 s ou mais.
+- Python 3.11+, langchain, langchain-mcp-adapters, langchain-openai (as mesmas versões já instaladas que fazem o agente.py funcionar; não trocar versões).
+- Modelo: MODELO do .env (padrão "openai:gpt-4o-mini") via init_chat_model com LITELLM_URL e LITELLM_API_KEY, temperatura 0.1, saída estruturada com with_structured_output.
+- Cliente MCP: MultiServerMCPClient (langchain_mcp_adapters), transporte streamable_http, timeout de 60 s, como no agente.py.
 - pydantic para os schemas, sqlite3 para memória, playwright para o portal, streamlit para o canal humano, python-dotenv para a chave.
 
 ## Regras obrigatórias do código
@@ -28,8 +31,8 @@ Os prompts e schemas JSON de cada tarefa estão em docs/prompts_agentes.md. Copi
 - Falhas: 503 → retry com backoff (2, 4, 8 s, máx. 4); 504 em consulta → repetir; 504 em ação → consultar antes de repetir; 409 → consultar de novo e reavaliar; 400/404/405/422 → não repetir igual, logar e devolver erro; 410 → parar ações.
 - Regras fixas ficam em código, não no LLM: prazos em dias úteis, mudança de data/dado sensível/desistência sempre escalam, CNH nunca vale como RG, checagem de destinatário antes de todo envio.
 - Sem evento novo, não chamar o LLM.
-- Controle de custo: somar `usage` de cada resposta; parar se uma rodada passar de US$ 0,50 ou se um evento passar de 5 chamadas ao LLM.
-- A chave fica em .env (OPENAI_API_KEY), nunca no código. .env no .gitignore.
+- Controle de custo: somar o uso de tokens de cada resposta (usage_metadata da mensagem crua retornada com include_raw=True); parar se uma rodada passar de US$ 0,50 ou se um evento passar de 5 chamadas ao LLM.
+- Configuração em .env (já existe; nunca no código; .env no .gitignore): MCP_URL, MODELO, LITELLM_URL, LITELLM_API_KEY. Ler com python-dotenv como no agente.py.
 - Não escrever no código a resposta de eventos específicos do cenário de treino.
 - Código simples, funções pequenas, comentários em português.
 
