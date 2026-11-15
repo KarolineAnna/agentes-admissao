@@ -1,0 +1,191 @@
+{
+  "eventos": {
+    "base": "eventos",
+    "descricao": "Tudo o que chegou para o time. O status começa em novo, vira lido quando um agente pega o evento e respondido quando alguém responde; o time pode gravar o status e a observação que quiser.",
+    "total": 61,
+    "chave": "id",
+    "campos": [
+      "id",
+      "de",
+      "nome",
+      "assunto",
+      "corpo",
+      "chegou_em",
+      "status",
+      "responde_a",
+      "origem",
+      "acoes",
+      "observacao"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": [
+      "status",
+      "observacao"
+    ]
+  },
+  "mensagens": {
+    "base": "mensagens",
+    "descricao": "Mensagens que o time enviou com enviar_mensagem. Serve para conferir se um envio que deu erro 504 chegou antes de repetir.",
+    "total": 32,
+    "chave": "id",
+    "campos": [
+      "id",
+      "para",
+      "assunto",
+      "mensagem",
+      "agente",
+      "evento_id",
+      "enviada_em"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": []
+  },
+  "contratados": {
+    "base": "contratados",
+    "descricao": "Ficha cadastral de quem vai começar: cargo, gestor, cidade, data de início e dados pessoais (dados sensíveis).",
+    "total": 5,
+    "chave": "id",
+    "campos": [
+      "id",
+      "nome",
+      "email",
+      "cargo",
+      "area",
+      "gestor",
+      "gestor_email",
+      "cidade",
+      "data_inicio",
+      "cpf",
+      "rg",
+      "data_nascimento",
+      "pis",
+      "estado_civil",
+      "filhos",
+      "exige_certificado_militar",
+      "endereco"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": []
+  },
+  "admissoes": {
+    "base": "admissoes",
+    "descricao": "Uma admissão por contratado, com o andamento de cada etapa. As etapas mudam conforme as áreas e as pessoas respondem.",
+    "total": 5,
+    "chave": "id",
+    "campos": [
+      "id",
+      "contratado",
+      "nome",
+      "cargo",
+      "gestor",
+      "data_inicio",
+      "status",
+      "ti",
+      "equipamento",
+      "documentos",
+      "documentos_faltando",
+      "contabilidade",
+      "exame",
+      "exame_data",
+      "contrato",
+      "gestor_avisado",
+      "observacao",
+      "historico"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": [
+      "observacao",
+      "data_inicio",
+      "aprovado_por"
+    ]
+  },
+  "documentos": {
+    "base": "documentos",
+    "descricao": "Documentos recebidos dos contratados, para conferir: aceitar, aceitar com ressalva ou recusar com motivo.",
+    "total": 40,
+    "chave": "id",
+    "campos": [
+      "id",
+      "admissao",
+      "tipo",
+      "arquivo",
+      "descricao",
+      "recebido_em",
+      "evento_id",
+      "status",
+      "motivo",
+      "conferido_por",
+      "aprovado_por",
+      "observacao"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": [
+      "status",
+      "motivo",
+      "aprovado_por",
+      "observacao"
+    ],
+    "preenchidos_pelo_servidor": [
+      "conferido_por"
+    ]
+  },
+  "documentos_exigidos": {
+    "base": "documentos_exigidos",
+    "descricao": "Documentos da admissão CLT, com a regra de cada um e quando é exigido.",
+    "total": 12,
+    "chave": "tipo",
+    "campos": [
+      "tipo",
+      "nome",
+      "regra",
+      "exigido",
+      "palavras"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": []
+  },
+  "checklist": {
+    "base": "checklist",
+    "descricao": "Etapas de cada fase, com o prazo em dias úteis antes do primeiro dia.",
+    "total": 11,
+    "chave": "id",
+    "campos": [
+      "id",
+      "fase",
+      "etapa",
+      "prazo_dias_uteis_antes",
+      "quando",
+      "quem"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": []
+  },
+  "areas": {
+    "base": "areas",
+    "descricao": "Áreas envolvidas na admissão, o que cada uma faz e o e-mail.",
+    "total": 5,
+    "chave": "area",
+    "campos": [
+      "area",
+      "email",
+      "faz",
+      "responde"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": []
+  },
+  "faq": {
+    "base": "faq",
+    "descricao": "Respostas prontas para as dúvidas dos contratados.",
+    "total": 11,
+    "chave": "id",
+    "campos": [
+      "id",
+      "pergunta",
+      "resposta",
+      "palavras_chave"
+    ],
+    "pode_registrar": false,
+    "pode_atualizar": []
+  }
+}

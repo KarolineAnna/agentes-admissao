@@ -1,136 +1,57 @@
-# Agentes de Admissão CLT
+# Time de agentes de Admissão (Hackathon UNIFEI, Tema 2)
 
-Sistema de três agentes de IA que conduzem a admissão CLT de contratados até o primeiro dia.
+**Problema:** a admissão CLT passa por muitas mãos (contratado, TI, equipamentos, clínica, contabilidade, gestor) com prazos curtos em dias úteis. Um documento aceito errado, um contrato não assinado ou um exame não confirmado fazem a pessoa **não começar** no primeiro dia.
 
-## Arquitetura
+## Como rodar
 
-### Agentes
-- **Coordenador**: Orquestra eventos, classifica, roteia e revisa ações críticas
-- **Conferente**: Confere documentos, monta pacote da contabilidade, dispara envio
-- **Comunicador**: Redige mensagens para contratados, áreas e gestores
+1. Servidor do kit com o tema de admissão:
+   - Docker: `$env:TEMA="admissao"; docker compose up --build mundo`
+   - ou Python: `python mundo.py --tema admissao`
+2. `.env` na raiz com `MCP_URL`, `MODELO`, `LITELLM_URL`, `LITELLM_API_KEY` (igual ao `agente.py`). Sem as chaves do LiteLLM, o time roda só com as regras.
+3. Terminal 1: `python admissao.py` (agentes).
+4. Terminal 2: `python rh.py` (pessoa do RH decide aprovações e escalações). Também dá para usar `python rh.py --listar` ou `python rh.py --decidir RH-001 --decisao aprovado --nome "Seu Nome"`.
 
-### Stack
-- **LangGraph**: Orquestração de atendimento com StateGraph e checkpointer SQLite
-- **OpenAI**: gpt-4o-mini com Structured Outputs (temperatura 0.1)
-- **MCP**: Cliente oficial com timeout de 15s e retry com backoff
-- **Playwright**: Envio pelo portal
-- **Streamlit**: Painel para aprovações e escalações
-- **SQLite**: Memória local (casos, cobranças, propostas, escalações, ações, lições)
+Arquivos gerados: `data/estado.json` (memória do caso), `data/rh.json` (aprovações e escalações), `data/licoes.json` (memória longa, sem dado pessoal), `logs/agentes.log` (uma linha por ação), `docs/ferramentas.json` e `docs/bases.json` (lidos do servidor).
 
-## Estrutura do Projeto
+## Os agentes
 
-```
-agentes/
-  coordenador.py      # Orquestração de eventos
-  conferente.py       # Conferência de documentos
-  comunicador.py      # Redação de mensagens
+| Agente | Papel |
+| --- | --- |
+| **coordenador** | Puxa eventos (`proximo_evento`), classifica (regras por palavras-chave, e o modelo só no que sobra), decide quem cuida, varre prazos, prepara escalações e aprovações para o RH, **revisa** as ações críticas dos outros e devolve para correção. |
+| **conferente** | Confere cada documento pela **descrição** contra `documentos_exigidos` (RN-09). Aceita, recusa com motivo ou marca divergência. Grava o estado de cada documento no servidor. |
+| **comunicador** | Envia as mensagens de modelo fixo (TI, equipamentos, clínica, contrato, gestor, pedido de documentos) e responde a quem pediu: o que foi feito e o que falta. |
 
-core/
-  mcp_cliente.py      # Cliente MCP com retry
-  llm.py              # Chamada ao gpt-4o-mini
-  memoria.py          # SQLite: casos, cobranças, propostas
-  prazos.py           # Dias úteis e varredura
-  regras.py           # Regras fixas (roteamento, privacidade)
-  schemas.py          # Pydantic para Structured Outputs
+Toda passagem de caso entre agentes vira `registrar_conversa`. Toda chamada leva `agente`, um `motivo` com a regra RN-xx e o `evento_id` quando atende um evento.
 
-grafo/
-  estado.py           # TypedDict do estado
-  nos.py              # Nós do grafo (CLASSIFICAR, ROTEAR, etc.)
-  grafo.py            # StateGraph com checkpointer
+## Quem revisa quem
 
-portal/
-  contabilidade.py    # Envio pelo portal (Playwright)
+O **coordenador** revisa antes de sair:
+- recusas de documento do **conferente** (a recusa precisa citar uma regra real);
+- respostas livres e mensagens fora de modelo fixo do **comunicador** (sem CPF, RG, PIS, nascimento ou endereço de outra pessoa; sem palavras-gatilho como contrato, assinar, exame ou pedido de documento, RN-57 a RN-59).
 
-painel/
-  app.py              # Streamlit: aprovações e escalações
+Se a revisão falha, ele registra "Corrigir: erro | correção" e o autor refaz uma vez. Se falhar de novo, o caso vai para o RH.
 
-prompts/              # Modelos de mensagem e prompts
+## Faz sozinho, propõe ou escala
 
-main.py               # Ponto de entrada
-```
+| Nível | Situações | Por quê |
+| --- | --- | --- |
+| **Faz sozinho** | Acionar TI, equipamentos e clínica; avisar gestor; mandar contrato; pedir e cobrar documentos; aceitar documento claramente válido; recusar CNH no lugar do RG ou comprovante com mais de 90 dias; responder dúvidas do FAQ | Baixo risco, regra clara, e atraso custa o primeiro dia |
+| **Propõe ao RH** | Mudança de data de início; comprovante em nome de outra pessoa; remarcar exame de quem faltou | Precisa do OK de uma pessoa (`aprovado_por`). O servidor recusa o nome de um agente |
+| **Só escala** | Dado sensível (saúde, laudo, processo); desistência; dúvida fora do FAQ; remetente não identificado; contratado sem resposta há 4 dias úteis; primeiro dia em risco (D-2 sem exame apto ou contrato) | Risco jurídico ou de privacidade, ou decisão que não é do agente |
 
-## Instalação
+As propostas trazem situação, o que já foi feito, risco, opções e recomendação (RN-37, RN-51). Os agentes nunca ficam esperando: o laço segue e retoma o caso quando a decisão aparece em `data/rh.json`.
 
-1. Clone o repositório:
-```bash
-git clone https://github.com/KarolineAnna/agentes-admissao.git
-cd agentes-admissao
-```
+## Métricas de sucesso
 
-2. Crie um ambiente virtual:
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# ou
-venv\Scripts\activate  # Windows
-```
+- Pessoas prontas no primeiro dia (exame apto e contrato assinado): todas.
+- Documentos inválidos aceitos: **0**.
+- Dados pessoais vazados: **0**.
+- Eventos sem ação: 0 (todo evento recebe resposta ou mensagem com `evento_id`).
 
-3. Instale as dependências:
-```bash
-pip install -r requirements.txt
-```
+## Com mais tempo
 
-4. Configure as variáveis de ambiente:
-```bash
-cp .env.example .env
-# Edite .env com suas credenciais
-```
-
-5. Instale o Playwright:
-```bash
-playwright install
-```
-
-## Uso
-
-Inicie os agentes:
-```bash
-python main.py
-```
-
-O sistema irá:
-1. Conectar ao servidor MCP em http://localhost:8765/mcp
-2. Iniciar o laço de eventos no coordenador
-3. Abrir o painel Streamlit em http://localhost:8501
-
-## Regras de Negócio
-
-Veja [docs/regras_negocio.md](docs/regras_negocio.md) para a lista completa de regras (RN-01 a RN-66).
-
-### Principais
-- Prazos em dias úteis (seg-sex, 08:00-18:00)
-- Mudança de data/dado sensível/desistência sempre escalam
-- CNH nunca vale como RG
-- Contabilidade só recebe dados pelo portal
-- Documentos: recebido, aceito, aceito com ressalva, recusado
-- Duas mensagens ao mesmo contratado contam como dois pedidos com >= 1 hora entre elas
-
-## Limites de Custo
-
-- Máximo US$ 0,50 por rodada do LLM
-- Máximo 5 chamadas ao LLM por evento
-- Contador de tokens e custo em cada resposta
-
-## Logging
-
-Logs são salvos em `logs/agentes.log` com nível configurável em `.env`.
-
-## Desenvolvimento
-
-### Testes
-```bash
-pytest
-```
-
-### Linting
-```bash
-pylint agentes/ core/ grafo/ portal/ painel/
-```
-
-## Referências
-
-- [Servidor MCP](http://localhost:8765/mcp)
-- [Documentação de Regras de Negócio](docs/regras_negocio.md)
-- [Prompts dos Agentes](docs/prompts_agentes.md)
-- [LangGraph](https://langchain-ai.github.io/langgraph/)
-- [OpenAI API](https://platform.openai.com/docs/api-reference)
+- Fase 2: envio à contabilidade pelo portal `/legado` com Playwright (RN-15, RN-32, RN-33).
+- Retomar eventos lidos e sem ação depois de uma queda (`listar_eventos`).
+- Priorizar a fila (cobranças do mundo e primeiro dia em risco primeiro).
+- Usar o modelo para julgar descrições ambíguas de documentos, sempre com revisão.
+- Painel web simples para o RH no lugar do terminal.

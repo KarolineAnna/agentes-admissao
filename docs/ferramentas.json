@@ -1,0 +1,99 @@
+{
+  "proximo_evento": {
+    "descricao": "Pega o próximo evento novo da caixa de entrada do time e marca como lido. Sem evento novo, devolve evento=null, encerrado (true quando o cenário acabou) e quando chega o próximo evento do cenário. Use esperar_segundos (até 30) para o servidor esperar um evento chegar antes de responder. O agente deve chamar em laço até encerrado=true.",
+    "argumentos": [
+      "agente",
+      "esperar_segundos",
+      "motivo"
+    ]
+  },
+  "listar_eventos": {
+    "descricao": "Lista os eventos da caixa de entrada, do mais antigo para o mais novo. Status do sistema: novo, lido, respondido; o time pode gravar outros com atualizar na base eventos. Devolve total e tem_mais para paginar.",
+    "argumentos": [
+      "agente",
+      "limite",
+      "motivo",
+      "offset",
+      "status"
+    ]
+  },
+  "ler_evento": {
+    "descricao": "Lê um evento inteiro, com o que já foi feito nele.",
+    "argumentos": [
+      "agente",
+      "evento_id",
+      "motivo"
+    ]
+  },
+  "responder_evento": {
+    "descricao": "Responde ao REMETENTE do evento (o campo 'de') e marca o evento como respondido. Para falar com outra pessoa, use enviar_mensagem.",
+    "argumentos": [
+      "agente",
+      "aguardar_resposta",
+      "evento_id",
+      "mensagem",
+      "motivo"
+    ]
+  },
+  "enviar_mensagem": {
+    "descricao": "Envia uma mensagem, pelo e-mail, para alguém do mundo: um time, uma pessoa que mandou evento ou alguém das bases do tema. Só responde quem o tema prevê (veja a resposta); as respostas chegam como eventos novos.",
+    "argumentos": [
+      "agente",
+      "assunto",
+      "evento_id",
+      "mensagem",
+      "motivo",
+      "para"
+    ]
+  },
+  "listar_bases": {
+    "descricao": "Lista as bases de dados do mundo: o que cada uma guarda, a chave, os campos, quais campos registrar e quais podem ser alterados.",
+    "argumentos": [
+      "agente",
+      "motivo"
+    ]
+  },
+  "consultar": {
+    "descricao": "Consulta uma base. 'filtro' compara campo a campo (o valor só precisa estar contido, sem diferença de acento); 'busca' exige que todas as palavras apareçam em algum campo. Devolve total e tem_mais para paginar.",
+    "argumentos": [
+      "agente",
+      "base",
+      "busca",
+      "filtro",
+      "limite",
+      "motivo",
+      "offset"
+    ]
+  },
+  "registrar": {
+    "descricao": "Cria um registro novo numa base que aceite. Os campos esperados de cada base estão em listar_bases (campos_para_registrar). O mundo valida as regras do tema e recusa o que estiver errado.",
+    "argumentos": [
+      "agente",
+      "base",
+      "dados",
+      "evento_id",
+      "motivo"
+    ]
+  },
+  "atualizar": {
+    "descricao": "Altera campos de um registro existente, achado pela chave da base (veja chave em listar_bases: id, patrimonio etc.). O mundo valida as regras do tema e recusa o que estiver errado.",
+    "argumentos": [
+      "agente",
+      "base",
+      "dados",
+      "evento_id",
+      "id",
+      "motivo"
+    ]
+  },
+  "registrar_conversa": {
+    "descricao": "Deixa no painel e no log uma conversa entre dois agentes do time. Não entrega nada a ninguém: o time decide como os agentes se falam de verdade.",
+    "argumentos": [
+      "agente",
+      "de",
+      "mensagem",
+      "motivo",
+      "para"
+    ]
+  }
+}
